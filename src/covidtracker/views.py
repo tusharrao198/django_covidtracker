@@ -108,6 +108,8 @@ update_state()
 update_district()
 # updating if changes made, only for the first user goes to a site
 
+##################################################################################
+# Views
 # rendering home page
 def covid_state(request):
     # citycases = states_cases.objects.all()
@@ -120,7 +122,6 @@ def covid_state(request):
         "states_cases": states_cases.objects.all().order_by("id"),
         "title": "State",
         "state": "active",
-        # "query": "query",
     }
     return render(request, "covidtracker/home.html", context_)
 
@@ -135,6 +136,7 @@ def covid_district(request):
     return render(request, "covidtracker/district.html", context_)
 
 
+# rendering search page
 def search(request):
     state_query = request.GET["state"]
     city_query = request.GET["city"]
@@ -150,7 +152,7 @@ def search(request):
     #  {'id': 983, 'city_name': 'Mandi', 'state_name': 'Himachal Pradesh', 'confirmed': 10096, 'Death': 124, 'Recovered': 9786, 'Active': 182}
 
     city_json = model_to_dict(city_json)
-    print(city_json)
+    # print(city_json)
     context_ = {
         "query_results": city_cases,
         "city_json": "city_json",
@@ -158,3 +160,23 @@ def search(request):
         "search": "active",
     }
     return render(request, "covidtracker/search.html", context_)
+
+
+def each_state(request, s_name):
+    try:
+        # question = Question.objects.get(pk=question_id)
+        state_query = states_cases.objects.get(state_name=s_name)
+        state_total_cases = states_cases.objects.get(state_name=s_name)
+        state_data = district_cases.objects.filter(state_name=state_query)
+        city_title = state_total_cases.state_name
+    except state_query.DoesNotExist:
+        raise Http404("Question does not exist")
+    context_ = {
+        # "city": district_cases.objects.filter(state_name=state_query),
+        "title": city_title,
+        "city": "active",
+        "state_query": state_query,
+        "state_data": state_data,
+        "state_total_cases": state_total_cases,
+    }
+    return render(request, "covidtracker/city.html", context_)
