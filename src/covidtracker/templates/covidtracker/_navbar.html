@@ -1,0 +1,26 @@
+{% load static %}
+
+<header id="header" class="fixed-top">
+    <div class="container d-flex align-items-center">
+        <nav class="navbar navbar-b navbar-trans navbar-expand-md fixed-top bg-dark" id="mainNav">
+            <a class="navbar-brand mr-auto" href="{% url 'covid-home' %}">COVID | {{title}}</a>
+            <div class="container">
+                <div class="ml-auto mr-5">
+                    <button class="navbar-toggler toggle-button" type="button" data-toggle="collapse" data-target="#navbarDefault" aria-controls="navbarDefault" aria-expanded="false" aria-label="Toggle navigation">
+                        <div class="animated-icon"><span></span><span></span><span></span></div>
+                    </button>
+                </div>
+                <div class="navbar-collapse collapse"  id="navbarDefault">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item {{home}}">
+                            <a class="nav-link" href={% url 'covid-home' %}>COVID</a>
+                        </li>
+                        <li class="nav-item {{home}}">
+                            <a class="nav-link" href={% url 'district' %}>CASES | District</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>
