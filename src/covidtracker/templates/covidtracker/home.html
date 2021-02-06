@@ -6,21 +6,20 @@
 <div class="section-bg pt-5 pb-5 px-5" id="introduction">
     <div class="container mt-2">
       <br>
-      <div><h1 class="title-a text-center headingtext">COVID-19 | CASES | INDIA = Totalcases</h1>
+      <div><h1 class="title-a text-center headingtext">COVID | CASES | INDIA = {{Totalcases}}</h1>
       <hr class="titlehr" />
-      <p class="pb-3">Lorem ipsum dolor sit amet consectetur adipisicing elit. Inventore libero explicabo eius odit culpa, quaerat numquam ducimus ipsam asperiores totam ut accusamus quidem repellat magnam id? In perspiciatis praesentium veniam!</p>
     </div>
 </div>
 <header ></header >
   <h1 align="center" style="color: Orange"><b> Search Cases in your city</b></h1>
 
-<form class="form-horizontal" method = "POST">
+<form class="form-horizontal" id="find_cases" action={% url 'search' %} method = "GET">
     <div class="form-group">
       <label class="control-label col-sm-2" for="state" style="color: white">State:</label>
         <div class="col-sm-10">
           <input  list = "states" class="form-control" type="Text" name="state" id="state" placeholder="Enter State">
             <datalist  id="states">
-              {% for state in states %}
+              {% for state in states_cases %}
                 <option value="{{state}}">{{state}}</option>
               {% endfor %}
             </datalist>
@@ -31,9 +30,7 @@
         <div class="col-sm-10">
             <input  list = "cities" class="form-control" type ="Text" name="city" id="city" placeholder="Enter city , (First few letters of your city)">
             <datalist  id="cities">
-              {% for city in cities %}
-                <option value="{{city}}">{{city}}</option>
-              {% endfor %}
+              <option></option>
             </datalist>
         </div>
       </div>
@@ -44,7 +41,7 @@
       </div>
 </form>
 
-<h1 align ="center"style="color: green" ><b> Cases in Each State - Table</b></h1>
+<h1 align ="center"style="color: green" ><b> Cases in Each State</b></h1>
 
 <div class="section-bg pt-5 pb-5 px-5" id="introduction">
   <div class="container">
@@ -81,7 +78,7 @@
   <div class="container">
       <div class="title-box text-center">
           <h3 class="title-a">
-              ABOUT ME
+              ABOUT
           </h3>
           <hr class="titlehr" />
           <p class="font-italic "><br>{{about_intro|safe}}</p>
@@ -94,3 +91,49 @@
   </div>
 </div>
 {% endblock %}
+
+{% block script %}
+  <script type="text/javascript">
+    let js = $.getJSON("https://api.covid19india.org/state_district_wise.json", "jsonp");
+    // console.log("success");
+    const my_form = document.querySelector("#city");
+    my_form.addEventListener('mouseover', abcd);  
+    // console.log(spaceData);
+    var state_check_if_same = "";
+    function abcd(e){
+      e.preventDefault();
+      if (Object.keys(js).length!=0)
+        {
+          const state = document.querySelector("#state");
+          let state_name = state.value;
+          console.log(state_name);
+          if (state_name.length!=0 && state_check_if_same!=state_name)
+          {
+            state_check_if_same = state_name;
+            // console.log(js["responseJSON"]);
+            let options = js["responseJSON"][state_name]['districtData'];
+            // console.log(Object.keys(options).length);
+            let citi = [];
+
+            for (let key in options) {
+              citi.push(key);
+            }
+            console.log(citi);
+
+            if (citi.length==0){
+              console.log(`Data was not recieved for State = ${state_name}`)
+            }
+            let cities = document.querySelector("#cities");
+            for(let i = 0; i < citi.length; i++) {
+              let opt = citi[i];
+              let el = document.createElement("option");
+              el.textContent = opt;
+              el.value = opt;
+              cities.appendChild(el);
+            }
+          }
+        }
+    }
+  </script>
+{% endblock %}
+

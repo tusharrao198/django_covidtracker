@@ -8,9 +8,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Title of Page -->
   {% if title %}
-  <title>{{title}} | COVID 19 CASES</title>
+  <title>{{title}} | COVID CASES</title>
   {% else %}
-  <title>COVID 19 CASES</title>
+  <title>COVID CASES</title>
   {% endif %}
 
   <!-- Bootstrap CSS -->
@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/venobox/1.9.1/venobox.css" integrity="sha512-QNXKinXDUMic9CFhTKRcc6oVgQctTz1ctZ0enkJrPKwA2aOeYbXxBjDqneUMlor7kGPp+qzbyN6jQrMO+ZsGsA==" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/venobox/1.9.1/venobox.min.css" integrity="sha512-e+0yqAgUQFoRrJ4pZigQXpOE0S7J9IGwmgH801h4H5ODqOCG8/GRfXHQ+9ab754NL79O7wDwdjwY3CcU8sEANg==" crossorigin="anonymous" />
   <!-- Custom CSS -->
-  <link rel="stylesheet" type="text/css" href="{% static 'covid19tracker/css/style.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'covidtracker/css/style.css' %}">
   <!-- Custom fonts -->
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet"> 
@@ -59,7 +59,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/venobox/1.9.1/venobox.min.js" integrity="sha512-6mm1Gra+9mSztlk6Q45F1soEHmkduyd2ponCIWNo5pr0lgcr8d79GQjQ3Nw0uRR3/+y/OZGklAi38yE1QSNpCw==" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/venobox/1.9.1/venobox.js" integrity="sha512-QKPvFmM87WXV1NcAhp4J2Gh/cklezuYEq+l9Z0SXTwySDJYS7SzaoLjOzNlhjAWYkv6A7RU8W+93L7z+gdODYg==" crossorigin="anonymous"></script>
   <!-- custom JS -->
-  <script src="{% static 'covid19tracker/js/script.js' %}"></script>
+  <script src="{% static 'covidtracker/js/script.js' %}"></script>
+  {% block script %}{% endblock %}
 </body>
 
 </html>
