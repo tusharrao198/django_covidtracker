@@ -17,10 +17,7 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-url_daily = "https://api.rootnet.in/covid19-in/stats/latest"
 # url2 = "https://api.rootnet.in/covid19-in/stats/history"
-url_district = "https://api.covid19india.org/state_district_wise.json"
-
 
 # function for opening url
 def open_url(url_):
@@ -32,94 +29,74 @@ def open_url(url_):
         return js
 
     except:
-        return "ERROR CONNECTING URL'S"
+        return open_url(url_)
 
 
-def update_state(url_, *args, **kwargs):
-    try:
-        js = open_url(url_)
+def update_state():
+    url_daily = "https://api.rootnet.in/covid19-in/stats/latest"
+    js = open_url(url_daily)
 
-        for i in js["data"]["regional"]:
-            state_name_ = i["loc"]
-            confirmed_ = i["totalConfirmed"]
-            deaths_ = i["deaths"]
-            recovered_ = i["discharged"]
-            active_ = confirmed_ - (deaths_ + recovered_)
+    for i in js["data"]["regional"]:
+        state_name_ = i["loc"]
+        confirmed_ = i["totalConfirmed"]
+        deaths_ = i["deaths"]
+        recovered_ = i["discharged"]
+        active_ = confirmed_ - (deaths_ + recovered_)
 
-            # updating model
+        # updating models
+        changes = states_cases.objects.filter(state_name=state_name_)
+        if confirmed_ > changes[0].confirmed:
+            print("Updating.... model state_cases =", state_name_)
+            do_it = states_cases.objects.filter(state_name=state_name_).update(
+                state_name=state_name_,
+                confirmed=confirmed_,
+                Death=deaths_,
+                Recovered=recovered_,
+                Active=active_,
+            )
+            # do_it.save()
+        else:
+            print(
+                f"{state_name_}--------------------------------------------cases are up to date"
+            )
 
-            # update_, created = states_cases.objects.get_or_create(state_name=state_name_)
 
-            # to check condition if created we can do like:
-            # if created:
-            #     "do this"
-            #     return pass
-            changes = states_cases.objects.get(state_name=state_name_)
-            if changes.confirmed != confirmed_:
-                print("Updating model state_cases =", state_name_)
-                do_it = states_cases(
+def update_district():
+    url_district = "https://api.covid19india.org/state_district_wise.json"
+    js1 = open_url(url_district)
+    for state in js1:
+        state_name_ = state
+        for cities in js1[state_name_]["districtData"]:
+            city_name_ = cities
+            confirmed_ = js1[state_name_]["districtData"][city_name_]["confirmed"]
+            recovered_ = js1[state_name_]["districtData"][city_name_]["recovered"]
+            active_ = js1[state_name_]["districtData"][city_name_]["active"]
+            deaths_ = js1[state_name_]["districtData"][city_name_]["deceased"]
+
+            changes = district_cases.objects.filter(city_name=city_name_)
+            # print("\n\nFROM ---------------DB=========================    ",changes)
+            # print("\n\nFROM DB=========================    ",changes[0].confirmed)
+            # print("\n\nnew-confirmed =--------------  ",confirmed_)
+            if confirmed_ > changes[0].confirmed:
+                print("Updating model district_cases =", state_name_, "->", city_name_)
+                do_it = district_cases.objects.filter(city_name=city_name_).update(
                     state_name=state_name_,
+                    city_name=city_name_,
                     confirmed=confirmed_,
                     Death=deaths_,
                     Recovered=recovered_,
                     Active=active_,
                 )
-                do_it.save()
+                # do_it.save()
             else:
                 print(
-                    f"{state_name_}--------------------------------------------cases are up to date"
+                    f"{state_name_}---->{city_name_}----------------------district cases are up to date"
                 )
 
-        return "success"
 
-    except:
-        return f"Error in update_district refresh page"
-
-
-def update_district(url_):
-    try:
-        js1 = open_url(url_)
-        for state in js1:
-            state_name_ = state
-            for cities in js1[state_name_]["districtData"]:
-                city_name_ = cities
-                confirmed_ = js1[state_name_]["districtData"][city_name_]["confirmed"]
-                recovered_ = js1[state_name_]["districtData"][city_name_]["recovered"]
-                active_ = js1[state_name_]["districtData"][city_name_]["active"]
-                deaths_ = js1[state_name_]["districtData"][city_name_]["deceased"]
-
-                changes = district_cases.objects.get(
-                    state_name=state_name_, city_name=city_name_
-                )
-                if changes.confirmed != confirmed_:
-                    print(
-                        "Updating model district_cases =", state_name_, "->", city_name_
-                    )
-                    doit = district_cases(
-                        state_name=state_name_,
-                        city_name=city_name_,
-                        confirmed=confirmed_,
-                        Death=deaths_,
-                        Recovered=recovered_,
-                        Active=active_,
-                    )
-                    doit.save()
-                else:
-                    print(
-                        f"{state_name_}-->{city_name_}----------------------district cases are up to date"
-                    )
-                    continue
-
-            doit.save()
-        return "success"
-
-    except:
-        return f"Error in update_district refresh page"
-
-
-update_district(url_district)
-update_state(url_daily)
-
+update_state()
+update_district()
+# updating if changes made, only for the first user goes to a site
 
 # rendering home page
 def covid_state(request):
