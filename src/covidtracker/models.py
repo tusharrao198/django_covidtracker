@@ -16,7 +16,7 @@ class states_cases(models.Model):
 
 
 class district_cases(models.Model):
-    city_name = models.CharField(max_length=50, default="city")
+    city_name = models.CharField(max_length=100, default="city")
     state_name = models.CharField(
         max_length=50, default="state", null=False, blank=False
     )

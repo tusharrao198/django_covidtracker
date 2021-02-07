@@ -1,4 +1,6 @@
+
 from covidtracker.models import district_cases, states_cases
+from django.db import models
 import json
 import ssl
 import urllib.request, urllib.error
@@ -60,7 +62,7 @@ def update_state(url_, *args, **kwargs):
 
 
 def update_district(url_):
-    try:
+    # try:
         js1 = open_url(url_)
         district_cases.objects.all().delete()
         for state in js1:
@@ -72,27 +74,75 @@ def update_district(url_):
                 active_ = js1[state_name_]["districtData"][city_name_]["active"]
                 deaths_ = js1[state_name_]["districtData"][city_name_]["deceased"]
 
+####################################################
+
+####################################################
                 # changes = district_cases.objects.filter(
                 #    state_name=state_name_, city_name=city_name_
                 # )
                 # print("CHANGES,", changes)
                 # if changes==confirmed_
                 #     print("Updating District_cases =", state_name_, city_name_)
-                print("Updating District_cases =", state_name_, " --->", city_name_)
-                doit = district_cases(
-                    state_name=state_name_,
-                    city_name=city_name_,
-                    confirmed=confirmed_,
-                    Death=deaths_,
-                    Recovered=recovered_,
-                    Active=active_,
-                )
-                doit.save()
+                if city_name_ == "Unknown":
+                    city_name_ = f"{city_name_}+{state_name_}"
+                    try:
+                        changes = district_cases.objects.filter(city_name=city_name_, state_name=state_name_)
+                        # print("changes",changes)
+                        if changes[0].city_name!=city_name_:
+                            print("Updating District_cases =", state_name_, " --->", city_name_)
+                            doit = district_cases(
+                                state_name=state_name_,
+                                city_name=city_name_,
+                                confirmed=confirmed_,
+                                Death=deaths_,
+                                Recovered=recovered_,
+                                Active=active_,
+                            )
+                            doit.save()
+                    except:
+                            print("Updating District_cases =", state_name_, " --->", city_name_)
+                            doit = district_cases(
+                                state_name=state_name_,
+                                city_name=city_name_,
+                                confirmed=confirmed_,
+                                Death=deaths_,
+                                Recovered=recovered_,
+                                Active=active_,
+                            )
+                            doit.save()
+                    
+
+                else:
+                    try:
+                        changes = district_cases.objects.filter(city_name=city_name_, state_name=state_name_)
+                        # print("changes",changes)
+                        if changes[0].city_name!=city_name_:
+                            print("Updating District_cases =", state_name_, " --->", city_name_)
+                            doit = district_cases(
+                                state_name=state_name_,
+                                city_name=city_name_,
+                                confirmed=confirmed_,
+                                Death=deaths_,
+                                Recovered=recovered_,
+                                Active=active_,
+                            )
+                            doit.save()
+                    except:
+                        print("Updating District_cases =", state_name_, " --->", city_name_)
+                        doit = district_cases(
+                            state_name=state_name_,
+                            city_name=city_name_,
+                            confirmed=confirmed_,
+                            Death=deaths_,
+                            Recovered=recovered_,
+                            Active=active_,
+                        )
+                        doit.save()
+
             doit.save()
 
-    except:
-        return "Error in update_district func"
-
+    # except:
+    #     return "Error in update_district func"
 
 def run():
     update_state(url_daily)

@@ -6,8 +6,7 @@
 <div class="section-bg pt-5 pb-5 px-5" id="introduction">
     <div class="container mt-2">
       <br>
-      <div><h1 class="title-a text-center headingtext">COVID | CASES | INDIA = {{Totalcases}}</h1>
-      <hr class="titlehr" />
+      <div class="text-right"><h1 class="title-a text-center headingtext">COVID | CASES | INDIA = {{Totalcases}}<small class="text-danger"> +({{increment}})</small></h1>Dated: {{present_date}} <hr class="titlehr" />
     </div>
 </div>
 <header ></header >
@@ -96,10 +95,12 @@
   <script type="text/javascript">
     let js = $.getJSON("https://api.covid19india.org/state_district_wise.json", "jsonp");
     // console.log("success");
+    
     const my_form = document.querySelector("#city");
     my_form.addEventListener('mouseover', abcd);  
     // console.log(spaceData);
     var state_check_if_same = "";
+    var previous_data = "";
     function abcd(e){
       e.preventDefault();
       if (Object.keys(js).length!=0)
@@ -124,6 +125,16 @@
               console.log(`Data was not recieved for State = ${state_name}`)
             }
             let cities = document.querySelector("#cities");
+            if (previous_data.length!=0) {
+              for(let i = 0; i < previous_data.length; i++) {
+                // let opt = citi[i];
+                // let el = document.getElementById("option");
+                // el.textContent = opt;
+                // el.value = opt;
+                cities.removeChild(cities.lastElementChild);
+              }
+            }
+            
             for(let i = 0; i < citi.length; i++) {
               let opt = citi[i];
               let el = document.createElement("option");
@@ -131,6 +142,7 @@
               el.value = opt;
               cities.appendChild(el);
             }
+            previous_data = citi;
           }
         }
     }
