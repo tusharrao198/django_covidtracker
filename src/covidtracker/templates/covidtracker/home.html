@@ -6,12 +6,51 @@
 <div class="section-bg pt-5 pb-5 px-5" id="introduction">
     <div class="container mt-2">
       <br>
-      <div class="text-right"><h1 class="title-a text-center headingtext">COVID | CASES | INDIA = {{Totalcases}}<small class="text-danger"> +({{increment}})</small></h1>Dated: {{present_date}} <hr class="titlehr" />
+      <div class="text-right"><h1 class="title-a text-center headingtext">COVID | CASES | INDIA </h1>Last Updated: {{present_date}} <hr class="titlehr" />
     </div>
 </div>
 <header ></header >
+
+<div class="card-deck justify-content-center title-a text-center">
+  <div class="card border-danger mb-2" style="max-width: 15rem;">
+    <div class="card-header bg-transparent border-danger text-danger">Confirmed</div>
+    <div class="card-body text-danger">
+      <!-- <h5 class="card-title headingtext">Confirmed</h5> -->
+      <p class="card-text">{{confirmed}}</p><p>+↑({{cases_increment}})</p>
+    </div>
+    <!-- <div class="card-footer bg-transparent border-success">Footer</div> -->
+  </div>
+  <div class="card border-danger mb-2" style="max-width: 15rem;">
+    <div class="card-header bg-transparent border-danger text-danger">Deaths</div>
+      <div class="card-body text-danger">
+      <!-- <h5 class="card-title">Deaths</h5> -->
+      <p class="card-text">{{Death}}</p><p>+↑({{death_inc}})</p>
+    </div>
+    <!-- <div class="card-footer bg-transparent border-success">Footer</div> -->
+  </div>
+  <div class="card border-success mb-2" style="max-width: 15rem;">
+    <div class="card-header bg-transparent border-success text-success">Recovered</div>
+    <div class="card-body text-success text-center">
+      <!-- <h5 class="card-title">Recovered</h5> -->
+      <p class="card-text">{{Recovered}}</p><p>+↑({{recovered_inc}})</p>
+    </div>
+    <!-- <div class="card-footer bg-transparent border-success">Footer</div> -->
+  </div>
+  <div class="card border-danger mb-2" style="max-width: 15rem;">
+    <div class="card-header bg-transparent border-danger text-danger">Active</div>
+    <div class="card-body text-danger text-center">
+      <!-- <h5 class="card-title">Active</h5> -->
+      <p class="card-text">{{Active}}</p>
+    </div>
+    <!-- <div class="card-footer bg-transparent border-success">Footer</div> -->
+  </div>
+</div>
+
+<br>
+  
   <h1 align="center" style="color: Orange"><b> Search Cases in your city</b></h1>
 <div class="container">
+<div class="msg"></div>
 <form class="form-horizontal" id="find_cases" action={% url 'search' %} method = "GET">
     <div class="form-group">
       <label class="control-label col-sm-2" for="state" style="color: white">State:</label>
@@ -35,11 +74,13 @@
       </div>
       <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10 center">
-          <button type="submit" class="btn btn-info">Search</button>
+          <button type="submit" id="submit_button" class="btn btn-info">Search</button>
         </div>
       </div>
 </form>
 </div>
+
+<br>
 <h1 align ="center"style="color: green" ><b> Cases in Each State</b></h1>
 
 <div class="section-bg pt-5 pb-5 px-5" id="introduction">
@@ -119,7 +160,7 @@
             for (let key in options) {
               citi.push(key);
             }
-            console.log(citi);
+            // console.log(citi);
 
             if (citi.length==0){
               console.log(`Data was not recieved for State = ${state_name}`)
@@ -145,6 +186,41 @@
             previous_data = citi;
           }
         }
+    }
+
+    let input_fields_check = document.querySelector("#submit_button");
+    input_fields_check.addEventListener('click', check_search);
+    function check_search(e) {
+      e.preventDefault();
+      let state_input = document.querySelector("#state");
+      let city_input = document.querySelector("#city");
+      let s = state_input.value;
+      let c = city_input.value;
+      let msg = document.querySelector(".msg");
+      // console.log("SASD",s.length);
+      if (s.length==0 || c.length==0){
+        // console.log("0000000",s,"000000000000",c);
+        document.getElementById("submit_button").disabled = true;
+        // msg.classList.add("error");
+        // msg.innerHTML = "Please Select!";
+
+        // setTimeout(() => msg.remove(), 3000);
+      }
+      document.getElementById("submit_button").disabled = false;
+    }
+    let form_ = document.getElementById("find_cases");
+    input_fields_check.addEventListener('click', enableBtn);
+    function enableBtn() {
+      let state_input = document.querySelector("#state");
+      let city_input = document.querySelector("#city");
+      let s = state.value;
+      let c = city.value;
+      // console.log("SSDDSDSDSSFSFSFSF")
+      if (s.length!=0 && c.length!=0){
+        // console.log("S",s,"C",c);
+        document.getElementById("submit_button").disabled = false;
+        form_.submit();
+      }
     }
   </script>
 {% endblock %}
