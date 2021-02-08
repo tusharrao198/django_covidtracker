@@ -245,21 +245,25 @@ def search(request):
     state_query = request.GET["state"]
     city_query = request.GET["city"]
     # print(f"{state_query} - >> {city_query}")
-    city_cases = district_cases.objects.filter(
-        state_name=state_query, city_name=city_query
-    )
-    a = list(city_cases)
-    city_json = district_cases.objects.filter(
-        state_name=state_query, city_name=city_query
-    ).first()  # .first() conveerts object to instance)
+    if str(city_query) == "Unknown":
+        city_query = f"Unknown+{state_query}"
+        city_cases = district_cases.objects.filter(
+            state_name=state_query, city_name=city_query
+        )
+    else:
+        city_cases = district_cases.objects.filter(
+            state_name=state_query, city_name=city_query
+        )
+
+    # a = list(city_cases)
+    # city_json = district_cases.objects.filter(
+    #     state_name=state_query, city_name=city_query
+    # ).first()  # .first() convert object to instance)
 
     #  {'id': 983, 'city_name': 'Mandi', 'state_name': 'Himachal Pradesh', 'confirmed': 10096, 'Death': 124, 'Recovered': 9786, 'Active': 182}
-
-    city_json = model_to_dict(city_json)
-    # print(city_json)
+    # city_json = model_to_dict(city_json)
     context_ = {
         "query_results": city_cases,
-        "city_json": "city_json",
         "title": "Result",
         "search": "active",
     }

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<div class="section-bg" style="padding:5%;" id="introduction">
+<div class="section-bg" style="padding:8%;" id="introduction">
       <!-- Default switch -->
     <div class='text-right' style='font-family: "JetBrains Mono", monospace;'> 
         Switch to Dark Mode
@@ -18,7 +18,7 @@
     </div>
 
   <!-- cards  -->
-  <div class="card-group justify-content-center subtitle-a text-center" style='font-weight: 900;'>
+  <div class="card-deck justify-content-center subtitle-a text-center" style='font-weight: 900;'>
     <div class="card card1 bg-danger border-danger mb-2" style="max-width: 15rem;">
       <div class="card-header border-danger">Confirmed</div>
       <div class="card-body">
@@ -46,10 +46,8 @@
     <div class="card card4 bg-warning border-warning mb-2 " style="max-width: 15rem;">
       <div class="card-header border-warning">Active</div>
       <div class="card-body text-center">
-        <!-- <h5 class="card-title">Active</h5> -->
         <p class="card-text">{{Active}}</p>
       </div>
-      <!-- <div class="card-footer bg-transparent border-success">Footer</div> -->
     </div>
   </div>
   <br>
