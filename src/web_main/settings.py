@@ -144,6 +144,6 @@ STATIC_URL = "/static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "covidtracker/static/covidtracker/images/")
+# MEDIA_ROOT = os.path.join(BASE_DIR, "covidtracker/static/covidtracker/images/")
 
-MEDIA_URL = "/covidtracker/static/covidtracker/images/"
+# MEDIA_URL = "/covidtracker/static/covidtracker/images/"

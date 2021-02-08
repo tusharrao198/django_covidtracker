@@ -5,10 +5,19 @@
 {% block content %}
 <h1 align ="center"style="color: green" ><b> Cases in State - Table</b></h1>
 
-<div class="section-bg pt-5 pb-5 px-5" id="introduction">
+<div class="section-bg" style="padding:5%;" id="introduction">
+  <!-- Default switch -->
+  <div class='text-right' style='font-family: "JetBrains Mono", monospace;'> 
+  Switch to Dark Mode
+  <label class="switch">
+  <input type="checkbox">
+  <span class="slider round darkMode"></span>
+  </label>
+  </div>
   <div class="container">
-    <table  class="table table-striped table-dark" border=1 width=100%>
-      <thead class= "thead-dark">
+    <div class="section-bg">
+    <table  class="table table-striped table-bordered">
+      <thead class= "thead-dark subtitle-a">
         <tr>
           <th>State</th>
           <th>Districts</th>
@@ -32,9 +41,10 @@
       </tbody>
     </table>
     <div class="align-items-right">
-      <button type="submit"class="btn btn-info"><a href={% url 'covid-home' %}>Go to Home</a></button>
+      <button type="submit" class="btn btn-outline-warning"><a href={% url 'covid-home' %}>Go to Home</a></button>
     </div>
   </div>
+</div>
 </div>
 {% endblock %}
 
