@@ -14,6 +14,7 @@ import os
 import psycopg2
 from pathlib import Path
 from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,12 +24,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config("COVIDAPP_SECRET_KEY")
+try:
+    SECRET_KEY = config("COVIDAPP_SECRET_KEY")
+except:
+    SECRET_KEY = os.environ.get("COVIDAPP_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG")
+try:
+    DEBUG = config("DEBUG")
+except:
+    DEBUG = os.environ.get("DEBUG")
 
-ALLOWED_HOSTS = ["*"]
+
+ALLOWED_HOSTS = ["sicmunduscovidtracker.herokuapp.com", "127.0.0.1"]
 
 
 # Application definition
@@ -48,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -102,6 +111,8 @@ DATABASES = {
     },
 }
 
+localdb_from_env = dj_database_url.config(conn_max_age=600)
+DATABASES["default"].update(localdb_from_env)
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -142,8 +153,12 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# MEDIA_ROOT = os.path.join(BASE_DIR, "covidtracker/static/covidtracker/images/")
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# MEDIA_URL = "/covidtracker/static/covidtracker/images/"
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "web_main/staticfiles")]
+
+MEDIA_URL = "/media/"
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
