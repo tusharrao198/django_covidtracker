@@ -14,6 +14,7 @@ import os
 import psycopg2
 from pathlib import Path
 from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,12 +24,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config("COVIDAPP_SECRET_KEY")
+try:
+    SECRET_KEY = config("COVIDAPP_SECRET_KEY")
+except:
+    SECRET_KEY = os.environ.get("COVIDAPP_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG")
+try:
+    DEBUG = config("DEBUG")
+except:
+    DEBUG = os.environ.get("DEBUG")
 
-ALLOWED_HOSTS = ["*"]
+
+ALLOWED_HOSTS = ["sicmunduscovidtracker.herokuapp.com", "127.0.0.1"]
 
 
 # Application definition
@@ -48,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -90,18 +99,51 @@ WSGI_APPLICATION = "web_main.wsgi.application"
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+try:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "USER": config("DB_USER"),
+            "NAME": config("DB_NAME"),
+            "HOST": config("DB_HOST"),
+            "PASSWORD": config("DB_PASSWORD"),
+            "PORT": config("DB_PORT"),
+        },
+    }
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "USER": config("DB_USER"),
-        "NAME": config("DB_NAME"),
-        "HOST": config("DB_HOST"),
-        "PASSWORD": config("DB_PASSWORD"),
-        "PORT": config("DB_PORT"),
-    },
-}
+except:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "USER": os.environ.get("DB_USER"),
+            "NAME": os.environ.get("DB_NAME"),
+            "HOST": os.environ.get("DB_HOST"),
+            "PASSWORD": os.environ.get("DB_PASSWORD"),
+            "PORT": os.environ.get("DB_PORT"),
+        },
+    }
 
+try:
+    try:
+        DB_HEROKU_URL = os.environ.get("DB_HEROKU_URL")
+
+    except:
+        DB_HEROKU_URL = config("DB_HEROKU_URL")
+
+    # localdb_from_env = dj_database_url.config(conn_max_age=600)
+
+    DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+
+    DATABASES["default"] = dj_database_url.config(default=DB_HEROKU_URL)
+
+    DATABASES["default"] = dj_database_url.parse(
+        DB_HEROKU_URL,
+        conn_max_age=600,
+    )
+except:
+    pass
+
+# DATABASES["default"].update(localdb_from_env)
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -142,8 +184,14 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+print("BASE_DIR", BASE_DIR)
+print("STATIC_ROOT", STATIC_ROOT)
 
-# MEDIA_ROOT = os.path.join(BASE_DIR, "covidtracker/static/covidtracker/images/")
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# MEDIA_URL = "/covidtracker/static/covidtracker/images/"
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "web_main/staticfiles")]
+
+MEDIA_URL = "/media/"
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")

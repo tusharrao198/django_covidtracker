@@ -7,7 +7,8 @@ from django.forms.models import model_to_dict
 from django.core import serializers
 from .models import district_cases, states_cases
 from django.db import models
-from .filters import search_
+
+# from .filters import search_
 import json
 import ssl
 import urllib.request, urllib.error
@@ -83,7 +84,7 @@ def total_count():
 def cases_increment():
     url_history = "https://api.rootnet.in/covid19-in/stats/history"
     js2 = open_url(url_history)
-    print("making connection")
+    # print("making connection")
     # cases incement of last two days in  INDIA
     dict_inc = {}
     for i in range(len(js2["data"])):
@@ -102,9 +103,9 @@ def cases_increment():
     cases_inc = dict_inc[present_date][0] - dict_inc[day_before][0]
     death_inc = dict_inc[present_date][1] - dict_inc[day_before][1]
     recovered_inc = dict_inc[present_date][2] - dict_inc[day_before][2]
-    print("DICT_INC:", dict_inc)
-    print("recovered_inc:", recovered_inc)
-    print("death_inc:", death_inc)
+    # print("DICT_INC:", dict_inc)
+    # print("recovered_inc:", recovered_inc)
+    # print("death_inc:", death_inc)
 
     return cases_inc, day_before, present_date, death_inc, recovered_inc
 
