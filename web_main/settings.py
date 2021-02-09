@@ -112,38 +112,27 @@ try:
     }
 
 except:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "USER": os.environ.get("DB_USER"),
-            "NAME": os.environ.get("DB_NAME"),
-            "HOST": os.environ.get("DB_HOST"),
-            "PASSWORD": os.environ.get("DB_PASSWORD"),
-            "PORT": os.environ.get("DB_PORT"),
-        },
-    }
-
-try:
     try:
         DB_HEROKU_URL = os.environ.get("DB_HEROKU_URL")
+        DATABASES["default"] = dj_database_url.config(
+            conn_max_age=600, ssl_require=True
+        )
+        DATABASES["default"] = dj_database_url.config(default=DB_HEROKU_URL)
+        DATABASES["default"] = dj_database_url.parse(
+            DB_HEROKU_URL,
+            conn_max_age=600,
+        )
 
     except:
-        DB_HEROKU_URL = config("DB_HEROKU_URL")
-
-    # localdb_from_env = dj_database_url.config(conn_max_age=600)
-
-    DATABASES["default"] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-
-    DATABASES["default"] = dj_database_url.config(default=DB_HEROKU_URL)
-
-    DATABASES["default"] = dj_database_url.parse(
-        DB_HEROKU_URL,
-        conn_max_age=600,
-    )
-except:
-    pass
-
-# DATABASES["default"].update(localdb_from_env)
+        DB_HEROKU_URL = os.environ.get("DATABASE_URL")
+        DATABASES["default"] = dj_database_url.config(
+            conn_max_age=600, ssl_require=True
+        )
+        DATABASES["default"] = dj_database_url.config(default=DB_HEROKU_URL)
+        DATABASES["default"] = dj_database_url.parse(
+            DB_HEROKU_URL,
+            conn_max_age=600,
+        )
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -185,8 +174,6 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-print("BASE_DIR", BASE_DIR)
-print("STATIC_ROOT", STATIC_ROOT)
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
