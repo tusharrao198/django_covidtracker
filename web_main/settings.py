@@ -177,7 +177,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "web_main/staticfiles")]
+try:
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, "covidtracker/static/covidtracker")]
+except:
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, "covidtracker/static/covidtracker/")]
+
 
 MEDIA_URL = "/media/"
 
