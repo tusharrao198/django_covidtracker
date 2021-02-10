@@ -13,7 +13,7 @@ class states_cases(models.Model):
     Dated = models.TextField(blank=False, null=False, default=date_)
 
     def __str__(self):
-        return f"{self.state_name}->{self.Dated}"
+        return f"{self.state_name}"
 
     def save(self):
         super().save()
@@ -37,7 +37,7 @@ class district_cases(models.Model):
         super().save()
 
 
-class cases_inc(models.Model):
+class CasesIncrementCheck(models.Model):
     confirmed_inc = models.IntegerField(blank=False, default=0, null=False)
     date_before = models.TextField(blank=False, default=0, null=False)
     present_date = models.TextField(blank=False, default=0, null=False)
@@ -46,7 +46,7 @@ class cases_inc(models.Model):
     Dated = models.TextField(blank=False, null=False, default=date_)
 
     def __str__(self):
-        return f"{self.confirmed_inc}->{self.Dated}"
+        return f"{self.Dated}"
 
     def save(self):
         super().save()

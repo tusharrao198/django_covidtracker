@@ -3,14 +3,16 @@ from django.db.models import Avg, Count, Min, Sum
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from django.core import serializers
-from .models import district_cases, states_cases, cases_inc
+from .models import district_cases, states_cases, CasesIncrementCheck
 from django.db import models
 import json
 import ssl
 import urllib.request, urllib.error
 import requests
 from datetime import datetime as dt
+import time
 
+date_ = str(dt.now()).split()[0]
 # ignoring ssl error
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
@@ -20,11 +22,13 @@ ctx.verify_mode = ssl.CERT_NONE
 def open_url(url_):
     try:
         res = requests.get(url_)
+        time.sleep(2)
         js = res.json()
         return js
 
     except:
         fh = urllib.request.urlopen(url_, context=ctx)
+        time.sleep(2)
         # .read() reads whole as a string
         data = fh.read().decode()
         js = json.loads(data)
@@ -51,8 +55,12 @@ def update_state():
                 Death=deaths_,
                 Recovered=recovered_,
                 Active=active_,
+                Dated=date_,
             )
-            # do_it.save()
+        states_cases.objects.filter(state_name=state_name_).update(
+            Dated=date_,
+        )
+        # do_it.save()
         # else:
         #     print(
         #         f"{state_name_}--------------------------------------------cases are up to date"
@@ -89,21 +97,23 @@ def cases_increment():
         "recovered_inc": cases[present_date]["discharged"]
         - cases[before_date]["discharged"],
     }
-    confirmed_inc_ = str(cases_inc.objects.get(confirmed_inc=inc["cases_inc"]))
-    day_before_ = str(cases_inc.objects.get(date_before=inc["day_before"]))
-    present_date_ = str(cases_inc.objects.get(present_date=inc["present_date"]))
-    death_inc_ = str(cases_inc.objects.get(death_inc=inc["death_inc"]))
-    recovered_inc_ = str(cases_inc.objects.get(recovered_inc=inc["recovered_inc"]))
+    query1 = CasesIncrementCheck.objects.get(id__in=(1,))
+    confirmed_inc_ = query1.confirmed_inc
+    present_date_ = query1.present_date
+    death_inc = query1.death_inc
+    recovered_inc = query1.recovered_inc
+    day_before_ = query1.date_before
 
-    if (day_before_ == str(inc["day_before"])) or (
-        present_date_ == str(inc["present_date"])
+    if (str(day_before_) != str(inc["day_before"])) or (
+        str(present_date_) != str(inc["present_date"])
     ):
-        doit = cases_inc.objects.filter().update(
+        doit = CasesIncrementCheck.objects.filter(present_date=present_date_).update(
             confirmed_inc=inc["cases_inc"],
             date_before=inc["day_before"],
             present_date=inc["present_date"],
             death_inc=inc["death_inc"],
             recovered_inc=inc["recovered_inc"],
+            Dated=date_,
         )
 
 
@@ -137,6 +147,9 @@ def update_district():
                             Active=active_,
                         )
                         # do_it.save()
+                    district_cases.objects.filter(city_name=city_name_).update(
+                        Dated=date_,
+                    )
                 except:
                     pass
 
@@ -161,16 +174,14 @@ def update_district():
                         Recovered=recovered_,
                         Active=active_,
                     )
+                district_cases.objects.filter(city_name=city_name_).update(
+                    Dated=date_,
+                )
             # else:
             #     print(
             #         f"{state_name_}---->{city_name_}----------------------district cases are up to date"
             #     )
 
-
-date_ = str(dt.now()).split()[0]
-dated1 = str(district_cases.objects.values("Dated")[0]["Dated"])
-dated2 = str(cases_inc.objects.values("Dated")[0]["Dated"])
-dated3 = str(states_cases.objects.values("Dated")[0]["Dated"])
 
 # updating if changes made, only for the first user goes to a site
 
@@ -178,17 +189,24 @@ dated3 = str(states_cases.objects.values("Dated")[0]["Dated"])
 # Views
 # rendering home page
 def covid_state(request):
-    if dated3 != date_:
+    date_1 = str(dt.now()).split()[0]
+    dated1 = str(district_cases.objects.values("Dated")[0]["Dated"])
+    query_inc_before = CasesIncrementCheck.objects.get(id__in=(1,))
+    dated2 = str(query_inc_before.Dated)
+    dated3 = str(states_cases.objects.values("Dated")[0]["Dated"])
+    if dated3 != date_1:
+        # print("UPDATE STATE")
         update_state()
-    if dated2 != date_:
+    if dated2 != date_1:
+        # print("UPDATE cases inc")
         cases_increment()
 
-    confirmed_inc = cases_inc.objects.values("confirmed_inc")[0]
-    present_date = cases_inc.objects.values("present_date")[0]
-    death_inc = cases_inc.objects.values("death_inc")[0]
-    recovered_inc = cases_inc.objects.values("recovered_inc")[0]
-    # print("recovered_inc", recovered_inc)
-
+    query_inc_after_updation = CasesIncrementCheck.objects.get(id__in=(1,))
+    confirmed_inc_ = query_inc_after_updation.confirmed_inc
+    present_date_ = query_inc_after_updation.present_date
+    death_inc_ = query_inc_after_updation.death_inc
+    recovered_inc_ = query_inc_after_updation.recovered_inc
+    # sum
     confirmed__sum = states_cases.objects.all().aggregate(Sum("confirmed"))
     Active__sum = states_cases.objects.all().aggregate(Sum("Active"))
     Recovered__sum = states_cases.objects.all().aggregate(Sum("Recovered"))
@@ -200,11 +218,10 @@ def covid_state(request):
         "Recovered": Recovered__sum["Recovered__sum"],
         "district_cases": district_cases.objects.all(),
         "states_cases": states_cases.objects.all().order_by("id"),
-        "cases_increment": confirmed_inc["confirmed_inc"],
-        "recovered_inc": recovered_inc["recovered_inc"],
-        "death_inc": death_inc["death_inc"],
-        # "day_before": day_before,
-        "present_date": present_date["present_date"],
+        "cases_increment": confirmed_inc_,
+        "recovered_inc": recovered_inc_,
+        "death_inc": death_inc_,
+        "present_date": present_date_,
         "title": "INDIA",
         "state": "active",
     }
@@ -213,11 +230,12 @@ def covid_state(request):
 
 # rendering district page
 def covid_district(request):
+    dated1 = str(district_cases.objects.values("Dated")[0]["Dated"])
     if dated1 != date_:
         update_district()
-        print("UPDAAAAAA")
-    else:
-        print("FASLSEV")
+        # print("UPDAAAAAA")
+    # else:
+    #     print("FASLSEV")
     context_ = {
         "district_cases": district_cases.objects.all().order_by("id"),
         "title": "District",

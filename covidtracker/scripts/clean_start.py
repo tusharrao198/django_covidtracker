@@ -1,4 +1,4 @@
-from covidtracker.models import district_cases, states_cases, cases_inc
+from covidtracker.models import district_cases, states_cases, CasesIncrementCheck
 from django.db import models
 import json
 import ssl
@@ -170,7 +170,7 @@ def update_district(url_):
 # Cases Increment
 def cases_increment():
     print("UPDATING INCREMENT DATA")
-    cases_inc.objects.all().delete()
+    CasesIncrementCheck.objects.all().delete()
     url_history = "https://api.rootnet.in/covid19-in/stats/history"
     js2 = open_url(url_history)
     data = list(js2["data"])
@@ -200,7 +200,7 @@ def cases_increment():
         - cases[before_date]["discharged"],
     }
 
-    doit = cases_inc(
+    doit = CasesIncrementCheck(
         confirmed_inc=inc["cases_inc"],
         date_before=inc["day_before"],
         present_date=inc["present_date"],
