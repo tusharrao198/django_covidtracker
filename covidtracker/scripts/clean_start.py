@@ -1,4 +1,5 @@
 from covidtracker.models import district_cases, states_cases, CasesIncrementCheck
+from django.db.models import Avg, Count, Min, Sum
 from django.db import models
 import json
 import ssl
@@ -166,6 +167,43 @@ def update_district(url_):
 
 # except:
 #     return "Error in update_district func"
+
+
+# # Cases Increment
+# def cases_increment():
+#     confirmed__sum_after = states_cases.objects.all().aggregate(Sum("confirmed"))[
+#         "confirmed__sum"
+#     ]
+#     Active__sum_after = states_cases.objects.all().aggregate(Sum("Active"))[
+#         "Active__sum"
+#     ]
+#     Recovered__sum_after = states_cases.objects.all().aggregate(Sum("Recovered"))[
+#         "Recovered__sum"
+#     ]
+#     Death__sum_after = states_cases.objects.all().aggregate(Sum("Death"))["Death__sum"]
+
+#     date_after = str(states_cases.objects.values("Dated")[0]["Dated"])
+#     print(f"DATE AFTER = {date_after}")
+
+#     inc = {
+#         "totalcases_inc": confirmed__sum_after,
+#         "day_before": date_after,
+#         "present_date": date_after,
+#         "death_inc": Death__sum_after,
+#         "recovered_inc": Recovered__sum_after,
+#     }
+
+#     doit = CasesIncrementCheck(
+#         confirmed_inc=inc["totalcases_inc"],
+#         date_before=inc["day_before"],
+#         present_date=inc["present_date"],
+#         death_inc=inc["death_inc"],
+#         recovered_inc=inc["recovered_inc"],
+#         Dated=date_,
+#     )
+#     doit.save()
+#     print(f"DATA UPDATED in CasesIncrementCheck")
+
 
 # Cases Increment
 def cases_increment():

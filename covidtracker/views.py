@@ -3,6 +3,7 @@ from django.db.models import Avg, Count, Min, Sum
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms.models import model_to_dict
 from django.core import serializers
+
 from .models import district_cases, states_cases, CasesIncrementCheck
 from django.db import models
 import json
@@ -22,17 +23,26 @@ ctx.verify_mode = ssl.CERT_NONE
 def open_url(url_):
     try:
         res = requests.get(url_)
-        time.sleep(2)
         js = res.json()
         return js
 
     except:
         fh = urllib.request.urlopen(url_, context=ctx)
-        time.sleep(2)
         # .read() reads whole as a string
         data = fh.read().decode()
         js = json.loads(data)
         return js
+
+
+confirmed__sum_before = states_cases.objects.all().aggregate(Sum("confirmed"))[
+    "confirmed__sum"
+]
+Active__sum_before = states_cases.objects.all().aggregate(Sum("Active"))["Active__sum"]
+Recovered__sum_before = states_cases.objects.all().aggregate(Sum("Recovered"))[
+    "Recovered__sum"
+]
+Death__sum_before = states_cases.objects.all().aggregate(Sum("Death"))["Death__sum"]
+date_before = str(states_cases.objects.values("Dated")[0]["Dated"])
 
 
 def update_state():
@@ -69,52 +79,44 @@ def update_state():
 
 # Cases Increment
 def cases_increment():
-    url_history = "https://api.rootnet.in/covid19-in/stats/history"
-    js2 = open_url(url_history)
-    data = list(js2["data"])
-    before = data[-2]["summary"]
-    present = data[-1]["summary"]
-    before_date = data[-2]["day"]
-    present_date = data[-1]["day"]
-    cases = {
-        present_date: {
-            "total": present["total"],
-            "deaths": present["deaths"],
-            "discharged": present["discharged"],
-        },
-        before_date: {
-            "total": before["total"],
-            "deaths": before["deaths"],
-            "discharged": before["discharged"],
-        },
-    }
+    # total cases after _updating
+    confirmed__sum_after = states_cases.objects.all().aggregate(Sum("confirmed"))[
+        "confirmed__sum"
+    ]
+    Active__sum_after = states_cases.objects.all().aggregate(Sum("Active"))[
+        "Active__sum"
+    ]
+    Recovered__sum_after = states_cases.objects.all().aggregate(Sum("Recovered"))[
+        "Recovered__sum"
+    ]
+    Death__sum_after = states_cases.objects.all().aggregate(Sum("Death"))["Death__sum"]
+
+    date_after = str(states_cases.objects.values("Dated")[0]["Dated"])
+    print(f"DATE AFTER = {date_after}")
 
     inc = {
-        "cases_inc": cases[present_date]["total"] - cases[before_date]["total"],
-        "day_before": before_date,
-        "present_date": present_date,
-        "death_inc": cases[present_date]["deaths"] - cases[before_date]["deaths"],
-        "recovered_inc": cases[present_date]["discharged"]
-        - cases[before_date]["discharged"],
+        "totalcases_inc": confirmed__sum_after - confirmed__sum_before,
+        "day_before": date_before,
+        "present_date": date_after,
+        "death_inc": Death__sum_after - Death__sum_before,
+        "recovered_inc": Recovered__sum_after - Recovered__sum_before,
     }
-    query1 = CasesIncrementCheck.objects.get(id__in=(1,))
+
+    query1 = CasesIncrementCheck.objects.all().first()
     confirmed_inc_ = query1.confirmed_inc
     present_date_ = query1.present_date
     death_inc = query1.death_inc
     recovered_inc = query1.recovered_inc
     day_before_ = query1.date_before
-
-    if (str(day_before_) != str(inc["day_before"])) or (
-        str(present_date_) != str(inc["present_date"])
-    ):
-        doit = CasesIncrementCheck.objects.filter(present_date=present_date_).update(
-            confirmed_inc=inc["cases_inc"],
-            date_before=inc["day_before"],
-            present_date=inc["present_date"],
-            death_inc=inc["death_inc"],
-            recovered_inc=inc["recovered_inc"],
-            Dated=date_,
-        )
+    doit = CasesIncrementCheck.objects.filter(present_date=present_date_).update(
+        confirmed_inc=inc["totalcases_inc"],
+        date_before=inc["day_before"],
+        present_date=inc["present_date"],
+        death_inc=inc["death_inc"],
+        recovered_inc=inc["recovered_inc"],
+        Dated=date_after,
+    )
+    print(f"DATA UPDATED in CasesIncrementCheck")
 
 
 def update_district():
@@ -189,28 +191,39 @@ def update_district():
 # Views
 # rendering home page
 def covid_state(request):
-    date_1 = str(dt.now()).split()[0]
-    dated1 = str(district_cases.objects.values("Dated")[0]["Dated"])
-    query_inc_before = CasesIncrementCheck.objects.get(id__in=(1,))
+    date_1 = str(dt.now()).split()[0]  # todays date
+    print("DATE1", date_1)
+    dated1 = str(district_cases.objects.all().first().Dated)
+    query_inc_before = CasesIncrementCheck.objects.all().first()
     dated2 = str(query_inc_before.Dated)
-    dated3 = str(states_cases.objects.values("Dated")[0]["Dated"])
-    if dated3 != date_1:
-        # print("UPDATE STATE")
-        update_state()
-    if dated2 != date_1:
-        # print("UPDATE cases inc")
-        cases_increment()
+    dated3 = str(states_cases.objects.all().first().Dated)
+    print("district_cases_dated1", dated1)
+    print("CasesIncrementCheck dated2", dated2)
+    print("states_cases dated3", dated3)
 
-    query_inc_after_updation = CasesIncrementCheck.objects.get(id__in=(1,))
+    if dated3 != date_1:
+        print("UPDATE STATE")
+        update_state()
+        time.sleep(1)
+        if dated2 != date_1:
+            print("UPDATE cases inc")
+            cases_increment()
+    else:
+        print("UP TO DATE")
+
+    query_inc_after_updation = CasesIncrementCheck.objects.first()
     confirmed_inc_ = query_inc_after_updation.confirmed_inc
     present_date_ = query_inc_after_updation.present_date
     death_inc_ = query_inc_after_updation.death_inc
     recovered_inc_ = query_inc_after_updation.recovered_inc
-    # sum
+
+    print(f"present _date{present_date_}")
+    # sum either after updation or not , above if condition satisfies or not
     confirmed__sum = states_cases.objects.all().aggregate(Sum("confirmed"))
     Active__sum = states_cases.objects.all().aggregate(Sum("Active"))
     Recovered__sum = states_cases.objects.all().aggregate(Sum("Recovered"))
     Death__sum = states_cases.objects.all().aggregate(Sum("Death"))
+
     context_ = {
         "confirmed": confirmed__sum["confirmed__sum"],
         "Active": Active__sum["Active__sum"],
@@ -233,9 +246,9 @@ def covid_district(request):
     dated1 = str(district_cases.objects.values("Dated")[0]["Dated"])
     if dated1 != date_:
         update_district()
-        # print("UPDAAAAAA")
-    # else:
-    #     print("FASLSEV")
+        print(f"UPDATING DISTRICT CASES on date= {date_}")
+    else:
+        print("DATA UP TO DATE")
     context_ = {
         "district_cases": district_cases.objects.all().order_by("id"),
         "title": "District",
