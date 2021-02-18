@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "ckeditor",
     "django_filters",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -112,27 +113,28 @@ try:
     }
 
 except:
-    try:
-        DB_HEROKU_URL = os.environ.get("DB_HEROKU_URL")
-        DATABASES["default"] = dj_database_url.config(
-            conn_max_age=600, ssl_require=True
-        )
-        DATABASES["default"] = dj_database_url.config(default=DB_HEROKU_URL)
-        DATABASES["default"] = dj_database_url.parse(
-            DB_HEROKU_URL,
-            conn_max_age=600,
-        )
+    pass
+    # try:
+    #     DB_HEROKU_URL = os.environ.get("DB_HEROKU_URL")
+    #     DATABASES["default"] = dj_database_url.config(
+    #         conn_max_age=600, ssl_require=True
+    #     )
+    #     DATABASES["default"] = dj_database_url.config(default=DB_HEROKU_URL)
+    #     DATABASES["default"] = dj_database_url.parse(
+    #         DB_HEROKU_URL,
+    #         conn_max_age=600,
+    #     )
 
-    except:
-        DB_HEROKU_URL = os.environ.get("DATABASE_URL")
-        DATABASES["default"] = dj_database_url.config(
-            conn_max_age=600, ssl_require=True
-        )
-        DATABASES["default"] = dj_database_url.config(default=DB_HEROKU_URL)
-        DATABASES["default"] = dj_database_url.parse(
-            DB_HEROKU_URL,
-            conn_max_age=600,
-        )
+    # except:
+    #     DB_HEROKU_URL = os.environ.get("DATABASE_URL")
+    #     DATABASES["default"] = dj_database_url.config(
+    #         conn_max_age=600, ssl_require=True
+    #     )
+    #     DATABASES["default"] = dj_database_url.config(default=DB_HEROKU_URL)
+    #     DATABASES["default"] = dj_database_url.parse(
+    #         DB_HEROKU_URL,
+    #         conn_max_age=600,
+    #     )
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

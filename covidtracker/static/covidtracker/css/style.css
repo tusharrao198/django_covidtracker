@@ -12,6 +12,10 @@ html {
   padding-top: 10%;
 }
 
+#introduction {
+  padding: 7%;
+}
+
 li {
   list-style: none;
 }
@@ -58,25 +62,45 @@ li {
   color: rgb(251, 245, 245);
 }
 
-@media (min-width: 768px) {
-  .navbar-brand {
-    position: relative;
-    margin-top: auto;
-    margin-bottom: auto;
-    width: 8%;
-    bottom: 2.3rem;
-    height: 10px;
-  }
-}
-
 @media (max-width: 768px) {
   .navbar-brand {
     position: relative;
     margin-top: auto;
     margin-bottom: auto;
-    width: 40%;
-    bottom: 1.8rem;
-    height: 10px;
+    width: 5%;
+    bottom: 1.5rem;
+    height: 4px;
+  }
+}
+@media (max-width: 480px) {
+  #city_table {
+    width: 0.2rem;
+    /* height: 5%; */
+    display: table;
+    display: table-cell;
+    vertical-align: middle;
+  }
+  #main_table {
+    width: 0.2rem;
+    /* height: 10%; */
+    display: table;
+    display: table-cell;
+    vertical-align: middle;
+  }
+  .text_size_reduce {
+    font-size: 1.5rem;
+    text-align: left;
+  }
+  #introduction {
+    padding: 20%;
+  }
+  .tr td {
+    font-size: 2rem;
+    overflow: hidden;
+    float: left;
+  }
+  .table {
+    column-width: 0.5rem;
   }
 }
 

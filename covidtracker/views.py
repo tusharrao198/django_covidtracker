@@ -13,6 +13,36 @@ import requests
 from datetime import datetime as dt
 import time
 
+from .serializers import DistrictSerializer, StateSerializer
+from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+
+
+class StateView(ListAPIView):
+    queryset = states_cases.objects.all()
+    serializer_class = StateSerializer
+
+
+class DistrictView(ListAPIView):
+    queryset = district_cases.objects.all()
+    serializer_class = DistrictSerializer
+
+
+@api_view(["GET"])
+def EachStateView(request, s_name):
+    queryset = district_cases.objects.all().filter(state_name=s_name)
+    serializer = DistrictSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+def EachCityCaseView(request, s_name, c_name):
+    queryset = district_cases.objects.filter(state_name=s_name, city_name=c_name)
+    serializer = DistrictSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
 date_ = str(dt.now()).split()[0]
 # ignoring ssl error
 ctx = ssl.create_default_context()
@@ -258,33 +288,32 @@ def covid_district(request):
 
 
 # rendering search page
-def search(request):
-    state_query = request.GET["state"]
-    city_query = request.GET["city"]
-    # print(f"{state_query} - >> {city_query}")
-    if str(city_query) == "Unknown":
-        city_query = f"Unknown+{state_query}"
-        city_cases = district_cases.objects.filter(
-            state_name=state_query, city_name=city_query
-        )
-    else:
-        city_cases = district_cases.objects.filter(
-            state_name=state_query, city_name=city_query
-        )
+# def search(request):
+#     state_query = request.GET["state"]
+#     city_query = request.GET["city"]
+#     if str(city_query) == "Unknown":
+#         city_query = f"Unknown+{state_query}"
+#         city_cases = district_cases.objects.filter(
+#             state_name=state_query, city_name=city_query
+#         )
+#     else:
+#         city_cases = district_cases.objects.filter(
+#             state_name=state_query, city_name=city_query
+#         )
 
-    # a = list(city_cases)
-    # city_json = district_cases.objects.filter(
-    #     state_name=state_query, city_name=city_query
-    # ).first()  # .first() convert object to instance)
+#     # a = list(city_cases)
+#     # city_json = district_cases.objects.filter(
+#     #     state_name=state_query, city_name=city_query
+#     # ).first()  # .first() convert object to instance)
 
-    #  {'id': 983, 'city_name': 'Mandi', 'state_name': 'Himachal Pradesh', 'confirmed': 10096, 'Death': 124, 'Recovered': 9786, 'Active': 182}
-    # city_json = model_to_dict(city_json)
-    context_ = {
-        "query_results": city_cases,
-        "title": "Result",
-        "search": "active",
-    }
-    return render(request, "covidtracker/search.html", context_)
+#     #  {'id': 983, 'city_name': 'Mandi', 'state_name': 'Himachal Pradesh', 'confirmed': 10096, 'Death': 124, 'Recovered': 9786, 'Active': 182}
+#     # city_json = model_to_dict(city_json)
+#     context_ = {
+#         "query_results": city_cases,
+#         "title": "Result",
+#         "search": "active",
+#     }
+#     return render(request, "covidtracker/search.html", context_)
 
 
 def each_state(request, s_name):

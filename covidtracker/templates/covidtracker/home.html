@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<div class="section-bg" style="padding:8%;" id="introduction">
+<div class="section-bg" id="introduction">
       <!-- Default switch -->
     <div class='text-right' style='font-family: "JetBrains Mono", monospace;'> 
         Switch to Dark Mode
@@ -11,14 +11,14 @@
         <span class="slider round darkMode"></span>
       </label>
     </div>
-    <div class="container mt-2">
-      <div class="text-right"><h1 style="color: #1de9b6;" class="title-head text-center headingtext">COVID | CASES | INDIA </h1><p style='font-family: "JetBrains Mono", monospace;'>Last Updated: {{present_date}}</p><hr class="titlehr" />
+    <div class="container mt-2" id="text_reduce">
+      <div class="text-right"><h1 style="color: #1de9b6;" class="title-head text-center headingtext text_size_reduce">COVID | CASES | INDIA </h1><p style='font-family: "JetBrains Mono", monospace;'>Last Updated: {{present_date}}</p><hr class="titlehr" />
       </div>
       <!-- <button><a href="/#/" class="darkMode">HELLO DARK MODE></a></button> -->
     </div>
 
   <!-- cards  -->
-  <div class="card-deck mt-2 justify-content-center subtitle-a text-center" style='font-weight: 900;'>
+  <div class="card-group mt-2 justify-content-center subtitle-a text-center" style='font-weight: 900;'>
     <div class="card card1 bg-danger border-danger mb-2" style="max-width: 15rem;">
       <div class="card-header border-danger">Confirmed</div>
       <div class="card-body">
@@ -52,10 +52,10 @@
   </div>
   <br>
   
-  <h1 align="center" style="color: Orange"><b> Search Cases in your city</b></h1>
+  <h1 align="center" class="text-center" style="color: Orange"><b> Search Cases in your city</b></h1>
   <div class="container justify-content-center">
   <div class="msg"></div>
-  <form class="form-horizontal" id="find_cases" action={% url 'search' %} method = "GET">
+  <form class="form-horizontal" id="find_cases" action="/" method = "GET">
       <div class="form-group">
         <label class="control-label col-sm-2" for="state" style="color: white">State:</label>
           <div class="col-auto">
@@ -85,8 +85,9 @@
   </div>
 
   <br>
-  <h1 align ="center"style="color: green" ><b> Cases in Each State</b></h1>
-    <div class="container">
+  <h1 align ="center"style="color: green" ><b id="cases_each_state">Cases in States</b></h1>
+  
+    <div class="container" id="main_table">
       <div class="section-bg">
       <table  class="table table-bordered table-striped">
       <thead class= "thead-dark">
@@ -115,6 +116,39 @@
     </table>
     </div>
   </div>
+
+  <div class="container" id="city_table" hidden>
+    <div class="section-bg">
+    <table  class="table table-bordered table-striped">
+    <thead class= "thead-dark">
+    <tr>
+      <th>City</th>
+      <th>State</th>
+      <th>Confirmed </th>
+      <th>Deaths</th>
+      <th>Recovered</th>
+      <th>Active</th>
+    </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="city_city_name"></td>
+        <td id="city_state_name"></td>
+        <td id="city_confirmed"></td>
+        <td id="city_Death"></td>
+        <td id="city_Recovered"></td>
+        <td id="city_Active"></td>
+      </tr>
+    
+    </tbody>
+    <!-- </div> -->
+  </table>
+  <div class="align-items-right">
+    <button type="submit" class="btn btn-outline-warning"><a href={% url 'covid-home' %}>Show Cases Count in States</a></button>
+  </div>
+  </div>
+</div>
+
   <br>
 
   <div class="title-box text-center">
@@ -136,96 +170,136 @@
 
 {% block script %}
   <script type="text/javascript">
-
-
-    let js = $.getJSON("https://api.covid19india.org/state_district_wise.json", "jsonp");
-    // console.log("success");
     
     const my_form = document.querySelector("#city");
     my_form.addEventListener('mouseover', abcd);  
-    // console.log(spaceData);
+    
+    
     var state_check_if_same = "";
     var previous_data = "";
     function abcd(e){
       e.preventDefault();
-      if (Object.keys(js).length!=0)
-        {
           const state = document.querySelector("#state");
           let state_name = state.value;
-          console.log(state_name);
+          
           if (state_name.length!=0 && state_check_if_same!=state_name)
           {
             state_check_if_same = state_name;
-            // console.log(js["responseJSON"]);
-            let options = js["responseJSON"][state_name]['districtData'];
-            // console.log(Object.keys(options).length);
-            let citi = [];
-
-            for (let key in options) {
-              citi.push(key);
-            }
-            // console.log(citi);
-
-            if (citi.length==0){
-              console.log(`Data was not recieved for State = ${state_name}`)
-            }
-            let cities = document.querySelector("#cities");
-            if (previous_data.length!=0) {
-              for(let i = 0; i < previous_data.length; i++) {
-                // let opt = citi[i];
-                // let el = document.getElementById("option");
-                // el.textContent = opt;
-                // el.value = opt;
-                cities.removeChild(cities.lastElementChild);
-              }
-            }
-            
-            for(let i = 0; i < citi.length; i++) {
-              let opt = citi[i];
-              let el = document.createElement("option");
-              el.textContent = opt;
-              el.value = opt;
-              cities.appendChild(el);
-            }
-            previous_data = citi;
+                    let dts = {
+                        type: "get",
+                        dataType: "json",
+                        url: `/api/districts/${state_name}`,
+                        data: [],
+                        contentType: "application/json; charset=utf-8",
+                        success: function (citi) {
+                          doThis(citi, state_name);
+                        },
+                        error: function (y) {
+                          console.log("problem", JSON.stringify(y));
+                        },
+                      };
+                      $.ajax(dts);
           }
+    }
+    
+    function doThis(citi, state_name){
+      if (citi.length==0){
+        console.log(`Data was not recieved for State = ${state_name}`);
+        }else{
+          let cities = document.querySelector("#cities");
+          if (previous_data.length!=0) {
+            for(let i = 0; i < previous_data.length; i++) {
+              cities.removeChild(cities.lastElementChild);
+            }
+          }
+          for(let i = 0; i < citi.length; i++) {
+            let opt = citi[i].city_name;
+            let el = document.createElement("option");
+            el.textContent = opt;
+            el.value = opt;
+            cities.appendChild(el);
+          }
+          previous_data = citi;
         }
     }
-
-    let input_fields_check = document.querySelector("#submit_button");
-    input_fields_check.addEventListener('click', check_search);
+  
+    document.getElementById("submit_button").addEventListener('click', check_search);
     function check_search(e) {
       e.preventDefault();
-      let state_input = document.querySelector("#state");
-      let city_input = document.querySelector("#city");
+      let state_input = document.querySelector("#state").value;
+      let city_input = document.querySelector("#city").value;
       let s = state_input.value;
       let c = city_input.value;
-      let msg = document.querySelector(".msg");
-      // console.log("SASD",s.length);
-      if (s.length==0 || c.length==0){
-        // console.log("0000000",s,"000000000000",c);
-        document.getElementById("submit_button").disabled = true;
-        // msg.classList.add("error");
-        // msg.innerHTML = "Please Select!";
 
-        // setTimeout(() => msg.remove(), 3000);
+      if(state_input.length==0 || city_input.length==0){
+        const msg = document.querySelector(".msg");
+        msg.classList.add("text-danger");
+        msg.innerHTML = "Please Select!";
+        setTimeout(() => (msg.innerHTML=''), 1000);
+      }else{
+        // document.getElementById("find_cases").submit();
+        const state = document.querySelector("#state");
+        const city = document.querySelector("#city");
+        let state_name = state.value;
+        let city_name = city.value;
+        let dtss = {
+                type: "get",
+                dataType: "json",
+                url: `/api/districts/${state_name}/${city_name}`,
+                data: [],
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                  document.getElementById("main_table").hidden=true;
+                  const data_array = Object.keys(response[0]);
+
+                  for(let q = 1; q<(data_array.length-1); q++){
+                    update_city_table(data_array[q], response[0]); 
+                  }
+                  document.getElementById("cases_each_state").innerHTML=`Cases in ${response[0].city_name},${response[0].state_name}`;
+                  document.getElementById("city_table").hidden=false;
+                },
+                error: function (y) {
+                  console.log("problem", JSON.stringify(y));
+                },
+              };
+              $.ajax(dtss);
       }
-      document.getElementById("submit_button").disabled = false;
-    }
-    let form_ = document.getElementById("find_cases");
-    input_fields_check.addEventListener('click', enableBtn);
-    function enableBtn() {
-      let state_input = document.querySelector("#state");
-      let city_input = document.querySelector("#city");
-      let s = state.value;
-      let c = city.value;
-      // console.log("SSDDSDSDSSFSFSFSF")
-      if (s.length!=0 && c.length!=0){
-        // console.log("S",s,"C",c);
-        document.getElementById("submit_button").disabled = false;
-        form_.submit();
+
+      
+      function update_city_table(value, response){
+        document.getElementById(`city_${value}`).innerHTML=eval(`response.${value}`);
       }
-    }
+
+
+      // const msg = document.querySelector(".msg");
+      // // console.log("SASD",s.length);
+      // if (s.length==0 || c.length==0){
+      //   console.log("0000000",s,"000000000000",c);
+      //   document.getElementById("submit_button").disabled = true;
+      //   msg.classList.add("error");
+      //   msg.innerHTML = "Please Select!";
+
+      //   setTimeout(() => msg.remove(), 3000);
+      // }
+      // document.getElementById("submit_button").disabled = false;
+      }
+
+    // let form_ = document.getElementById("find_cases");
+    // input_fields_check.addEventListener('click', enableBtn);
+    // function enableBtn() {
+    //   let state_input = document.querySelector("#state");
+    //   let city_input = document.querySelector("#city");
+    //   let s = state_input.value;
+    //   let c = city_input.value;
+    //   // console.log("SSDDSDSDSSFSFSFSF")
+    //   if (s.length!=0 && c.length!=0){
+    //     // console.log("S",s,"C",c);
+    //     document.getElementById("submit_button").disabled = false;
+    //     form_.submit();
+    //   }
+    
+    
   </script>
 {% endblock %}
+
 
