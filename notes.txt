@@ -1,4 +1,4 @@
-importnat urls: - 
+important urls: - 
 
 serializing model into json
 https://stackoverflow.com/questions/757022/how-do-you-serialize-a-model-instance-in-django

@@ -1,6 +1,9 @@
+# temp files
+removeVersionScript.py
 postgres.txt
 notes.txt
 filters.py
+
 *venv/*
 # Byte-compiled / optimized / DLL files
 __pycache__/

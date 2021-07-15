@@ -1,23 +1,14 @@
 from django.shortcuts import render
-from django.db.models import Avg, Count, Min, Sum
-from django.core.serializers.json import DjangoJSONEncoder
-from django.forms.models import model_to_dict
-from django.core import serializers
-
-from .models import district_cases, states_cases, CasesIncrementCheck
-from django.db import models
-import json
-import ssl
-import urllib.request, urllib.error
-import requests
+from django.db.models import Sum
 from datetime import datetime as dt
 import time
-
 from .serializers import DistrictSerializer, StateSerializer
-from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView
+# from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
+from .models import district_cases, states_cases, CasesIncrementCheck, About
+from .utils import *
 
 class StateView(ListAPIView):
     queryset = states_cases.objects.all()
@@ -44,176 +35,6 @@ def EachCityCaseView(request, s_name, c_name):
 
 
 date_ = str(dt.now()).split()[0]
-# ignoring ssl error
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
-
-# function for opening url
-def open_url(url_):
-    try:
-        res = requests.get(url_)
-        js = res.json()
-        return js
-
-    except:
-        fh = urllib.request.urlopen(url_, context=ctx)
-        # .read() reads whole as a string
-        data = fh.read().decode()
-        js = json.loads(data)
-        return js
-
-
-confirmed__sum_before = states_cases.objects.all().aggregate(Sum("confirmed"))[
-    "confirmed__sum"
-]
-Active__sum_before = states_cases.objects.all().aggregate(Sum("Active"))["Active__sum"]
-Recovered__sum_before = states_cases.objects.all().aggregate(Sum("Recovered"))[
-    "Recovered__sum"
-]
-Death__sum_before = states_cases.objects.all().aggregate(Sum("Death"))["Death__sum"]
-date_before = str(states_cases.objects.values("Dated")[0]["Dated"])
-
-
-def update_state():
-    url_daily = "https://api.rootnet.in/covid19-in/stats/latest"
-    js = open_url(url_daily)
-    for i in js["data"]["regional"]:
-        state_name_ = i["loc"]
-        confirmed_ = i["totalConfirmed"]
-        deaths_ = i["deaths"]
-        recovered_ = i["discharged"]
-        active_ = confirmed_ - (deaths_ + recovered_)
-
-        # updating models
-        changes = states_cases.objects.filter(state_name=state_name_)
-        if confirmed_ > changes[0].confirmed:
-            # print("Updating.... model state_cases =", state_name_)
-            do_it = states_cases.objects.filter(state_name=state_name_).update(
-                state_name=state_name_,
-                confirmed=confirmed_,
-                Death=deaths_,
-                Recovered=recovered_,
-                Active=active_,
-                Dated=date_,
-            )
-        states_cases.objects.filter(state_name=state_name_).update(
-            Dated=date_,
-        )
-        # do_it.save()
-        # else:
-        #     print(
-        #         f"{state_name_}--------------------------------------------cases are up to date"
-        #     )
-
-
-# Cases Increment
-def cases_increment():
-    # total cases after _updating
-    confirmed__sum_after = states_cases.objects.all().aggregate(Sum("confirmed"))[
-        "confirmed__sum"
-    ]
-    Active__sum_after = states_cases.objects.all().aggregate(Sum("Active"))[
-        "Active__sum"
-    ]
-    Recovered__sum_after = states_cases.objects.all().aggregate(Sum("Recovered"))[
-        "Recovered__sum"
-    ]
-    Death__sum_after = states_cases.objects.all().aggregate(Sum("Death"))["Death__sum"]
-
-    date_after = str(states_cases.objects.values("Dated")[0]["Dated"])
-    print(f"DATE AFTER = {date_after}")
-
-    inc = {
-        "totalcases_inc": confirmed__sum_after - confirmed__sum_before,
-        "day_before": date_before,
-        "present_date": date_after,
-        "death_inc": Death__sum_after - Death__sum_before,
-        "recovered_inc": Recovered__sum_after - Recovered__sum_before,
-    }
-
-    query1 = CasesIncrementCheck.objects.all().first()
-    confirmed_inc_ = query1.confirmed_inc
-    present_date_ = query1.present_date
-    death_inc = query1.death_inc
-    recovered_inc = query1.recovered_inc
-    day_before_ = query1.date_before
-    doit = CasesIncrementCheck.objects.filter(present_date=present_date_).update(
-        confirmed_inc=inc["totalcases_inc"],
-        date_before=inc["day_before"],
-        present_date=inc["present_date"],
-        death_inc=inc["death_inc"],
-        recovered_inc=inc["recovered_inc"],
-        Dated=date_after,
-    )
-    print(f"DATA UPDATED in CasesIncrementCheck")
-
-
-def update_district():
-    url_district = "https://api.covid19india.org/state_district_wise.json"
-    js1 = open_url(url_district)
-    for state in js1:
-        state_name_ = state
-        for cities in js1[state_name_]["districtData"]:
-            city_name_ = cities
-            confirmed_ = js1[state_name_]["districtData"][city_name_]["confirmed"]
-            recovered_ = js1[state_name_]["districtData"][city_name_]["recovered"]
-            active_ = js1[state_name_]["districtData"][city_name_]["active"]
-            deaths_ = js1[state_name_]["districtData"][city_name_]["deceased"]
-
-            if city_name_ != f"Unknown":
-                try:
-                    changes = district_cases.objects.filter(city_name=city_name_)
-                    if confirmed_ > changes[0].confirmed:
-                        # print(
-                        #     "Updating model district_cases =", state_name_, "->", city_name_
-                        # )
-                        do_it = district_cases.objects.filter(
-                            city_name=city_name_
-                        ).update(
-                            state_name=state_name_,
-                            city_name=city_name_,
-                            confirmed=confirmed_,
-                            Death=deaths_,
-                            Recovered=recovered_,
-                            Active=active_,
-                        )
-                        # do_it.save()
-                    district_cases.objects.filter(city_name=city_name_).update(
-                        Dated=date_,
-                    )
-                except:
-                    pass
-
-            elif city_name_ == f"Unknown":
-                city_name_ = f"{city_name_}+{state_name_}"
-                try:
-                    changes = district_cases.objects.filter(city_name=city_name_)
-                except:
-                    changes = district_cases.objects.filter(
-                        city_name=f"Unknown+{state_name_}"
-                    )
-                if confirmed_ > changes[0].confirmed:
-                    # print(
-                    #     "Updating model district_cases =", state_name_, "->", city_name_
-                    # )
-
-                    do_it = district_cases.objects.filter(city_name=city_name_).update(
-                        state_name=state_name_,
-                        city_name=city_name_,
-                        confirmed=confirmed_,
-                        Death=deaths_,
-                        Recovered=recovered_,
-                        Active=active_,
-                    )
-                district_cases.objects.filter(city_name=city_name_).update(
-                    Dated=date_,
-                )
-            # else:
-            #     print(
-            #         f"{state_name_}---->{city_name_}----------------------district cases are up to date"
-            #     )
-
 
 # updating if changes made, only for the first user goes to a site
 
@@ -222,14 +43,14 @@ def update_district():
 # rendering home page
 def covid_state(request):
     date_1 = str(dt.now()).split()[0]  # todays date
-    print("DATE1", date_1)
+    # print("DATE1", date_1)
     dated1 = str(district_cases.objects.all().first().Dated)
     query_inc_before = CasesIncrementCheck.objects.all().first()
     dated2 = str(query_inc_before.Dated)
     dated3 = str(states_cases.objects.all().first().Dated)
-    print("district_cases_dated1", dated1)
-    print("CasesIncrementCheck dated2", dated2)
-    print("states_cases dated3", dated3)
+    # print("district_cases_dated1", dated1)
+    # print("CasesIncrementCheck dated2", dated2)
+    # print("states_cases dated3", dated3)
 
     if dated3 != date_1:
         print("UPDATE STATE")
@@ -254,19 +75,22 @@ def covid_state(request):
     Recovered__sum = states_cases.objects.all().aggregate(Sum("Recovered"))
     Death__sum = states_cases.objects.all().aggregate(Sum("Death"))
 
+    intro_modify = About.objects.all()
     context_ = {
         "confirmed": confirmed__sum["confirmed__sum"],
         "Active": Active__sum["Active__sum"],
         "Death": Death__sum["Death__sum"],
         "Recovered": Recovered__sum["Recovered__sum"],
         "district_cases": district_cases.objects.all(),
-        "states_cases": states_cases.objects.all().order_by("id"),
+        "states_cases": states_cases.objects.all().order_by("state_name"),
         "cases_increment": confirmed_inc_,
         "recovered_inc": recovered_inc_,
         "death_inc": death_inc_,
         "present_date": present_date_,
         "title": "INDIA",
         "state": "active",
+        "about_intro": About.objects.first(),
+        "intro_modifiedDate": intro_modify[0].modified,
     }
     return render(request, "covidtracker/home.html", context_)
 
@@ -285,35 +109,6 @@ def covid_district(request):
         "district": "active",
     }
     return render(request, "covidtracker/district.html", context_)
-
-
-# rendering search page
-# def search(request):
-#     state_query = request.GET["state"]
-#     city_query = request.GET["city"]
-#     if str(city_query) == "Unknown":
-#         city_query = f"Unknown+{state_query}"
-#         city_cases = district_cases.objects.filter(
-#             state_name=state_query, city_name=city_query
-#         )
-#     else:
-#         city_cases = district_cases.objects.filter(
-#             state_name=state_query, city_name=city_query
-#         )
-
-#     # a = list(city_cases)
-#     # city_json = district_cases.objects.filter(
-#     #     state_name=state_query, city_name=city_query
-#     # ).first()  # .first() convert object to instance)
-
-#     #  {'id': 983, 'city_name': 'Mandi', 'state_name': 'Himachal Pradesh', 'confirmed': 10096, 'Death': 124, 'Recovered': 9786, 'Active': 182}
-#     # city_json = model_to_dict(city_json)
-#     context_ = {
-#         "query_results": city_cases,
-#         "title": "Result",
-#         "search": "active",
-#     }
-#     return render(request, "covidtracker/search.html", context_)
 
 
 def each_state(request, s_name):
