@@ -62,7 +62,7 @@ def update_state():
 
         # updating models
         changes = states_cases.objects.filter(state_name=state_name_)
-        if confirmed_ > changes[0].confirmed:
+        if len(changes)>0 and confirmed_ > changes[0].confirmed:
             print("Updating.... model state_cases =", state_name_)
             do_it = states_cases.objects.filter(state_name=state_name_).update(
                 state_name=state_name_,
@@ -145,7 +145,7 @@ def update_district():
                 try:
                     changes = district_cases.objects.filter(
                         city_name=city_name_)
-                    if confirmed_ > changes[0].confirmed:
+                    if len(changes)>0 and confirmed_ > changes[0].confirmed:
                         # print(
                         #     "Updating model district_cases =", state_name_, "->", city_name_
                         # )

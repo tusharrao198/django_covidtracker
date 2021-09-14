@@ -104,10 +104,24 @@ Now finally, click on `Deploy changes`. And in the end, enable `Github automatic
 - Note:- If not, you can see the error it shows while deploying using `heroku logs --tail`. I fanything comesup try to fix it or google it.
   Mostly the error is due to the misconfigured Procfile. Try to set the right path of the wsgi file. It will then work flawlessly.
 
-# Where did I got stuck for the first time?
+# Where did I got stuck for the first time ?
 
 First of all when we setup the project we keep the project inside the folder, and outside that folder we keep our `requirements.txt` file and other contributing.md, Readme file etc. But I have noticed that heroku is not able to find the Procfile when kept in this way.
 
-Solution to that I came out with was to initialize the git repo in the directory where manage.py was present.
+`Fix`: initialize the git repo in the directory where manage.py was present.
 
-I mean i tries that way but was not able to successfully dedployed, everytime I tried that Heroku was not able to find the Procfile. I will try to fix that issue, as i think I'm missing something.
+
+# Useful Heroku Commands:-
+
+`https://devcenter.heroku.com/articles/heroku-cli-commands`
+
+heroku run bash --app sicmunduscovidtracker
+
+# to enter pg psql database of a particular app
+heroku pg:psql <postgresql_db_ID> --app <appname>
+
+# Get all psql db:-
+heroku pg:psql --apps
+
+# reset database
+heroku pg:reset <postgresql_db_ID>
